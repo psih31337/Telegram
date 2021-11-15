@@ -367,6 +367,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
     private boolean isDocumentsPicker;
     private boolean needCaptionLayout;
     private AnimatedFileDrawable currentAnimation;
+    private boolean shareItemVisible = false;
     private boolean allowShare;
     private boolean openedFullScreenVideo;
     private boolean dontChangeCaptionPosition;
@@ -3333,7 +3334,33 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             if (captionTextViewSwitcher != null) {
                 captionTextViewSwitcher.invalidateViews();
             }
-        } else if (id == NotificationCenter.filePreparingFailed) {
+        } else if(id == NotificationCenter.chatInfoDidLoad) {
+            TLRPC.ChatFull chatFull = (TLRPC.ChatFull) args[0];
+            if (chatFull.id == -currentDialogId) {
+                boolean canSave = ChatObject.canSaveContent(currentDialogId);
+                shareButton.setVisibility(canSave ? View.VISIBLE : View.GONE);
+                if (!canSave) {
+                    sendItem.setVisibility(View.GONE);
+                    menuItem.hideSubItem(gallery_menu_save);
+                    menuItem.hideSubItem(gallery_menu_share);
+                    menuItem.hideSubItem(gallery_menu_savegif);
+
+                    if (currentMessageObject != null && currentMessageObject.isGif())
+                        menuItem.setVisibility(View.GONE);
+                } else {
+                    if (currentMessageObject != null && currentMessageObject.isGif())
+                        menuItem.showSubItem(gallery_menu_savegif);
+                    else
+                        menuItem.showSubItem(gallery_menu_save);
+
+                    if (shareItemVisible)
+                        menuItem.showSubItem(gallery_menu_share);
+
+                    if (actionBarItemsVisibility.get(sendItem))
+                        sendItem.setVisibility(View.VISIBLE);
+                }
+            }
+        }else if (id == NotificationCenter.filePreparingFailed) {
             MessageObject messageObject = (MessageObject) args[0];
             if (loadInitialVideo) {
                 loadInitialVideo = false;
@@ -9683,6 +9710,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         menuItem.hideSubItem(gallery_menu_set_as_main);
         menuItem.hideSubItem(gallery_menu_delete);
         menuItem.hideSubItem(gallery_menu_speed);
+
         speedGap.setVisibility(View.GONE);
         actionBar.setTranslationY(0);
 
@@ -9999,6 +10027,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         checkFullscreenButton();
+
+        boolean canSave = ChatObject.canSaveContent(currentDialogId);
+        shareButton.setVisibility(canSave?View.VISIBLE:View.GONE);
+        if(!canSave) {
+            sendItem.setVisibility(View.GONE);
+            shareItemVisible = menuItem.isSubItemVisible(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_save);
+            menuItem.hideSubItem(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_savegif);
+
+            if(messageObject != null && messageObject.isGif())
+                menuItem.setVisibility(View.GONE);
+        }
     }
 
     private boolean canSendMediaToParentChatActivity() {
@@ -10545,6 +10586,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             groupedPhotosListView.fillList();
             pageBlocksAdapter.updateSlideshowCell(pageBlock);
         }
+
+        boolean canSave = ChatObject.canSaveContent(currentDialogId);
+        shareButton.setVisibility(canSave?View.VISIBLE:View.GONE);
+        if(!canSave) {
+            sendItem.setVisibility(View.GONE);
+            shareItemVisible = menuItem.isSubItemVisible(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_save);
+            menuItem.hideSubItem(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_savegif);
+
+            if(newMessageObject != null && newMessageObject.isGif())
+                menuItem.setVisibility(View.GONE);
+        }
         setCurrentCaption(newMessageObject, caption, animateCaption);
     }
 
@@ -10899,6 +10953,19 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
             }
         }
         detectFaces();
+
+        boolean canSave = ChatObject.canSaveContent(currentDialogId);
+        shareButton.setVisibility(canSave?View.VISIBLE:View.GONE);
+        if(!canSave) {
+            sendItem.setVisibility(View.GONE);
+            shareItemVisible = menuItem.isSubItemVisible(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_save);
+            menuItem.hideSubItem(gallery_menu_share);
+            menuItem.hideSubItem(gallery_menu_savegif);
+
+            if(currentMessageObject != null && currentMessageObject.isGif())
+                menuItem.setVisibility(View.GONE);
+        }
     }
 
     private void setCurrentCaption(MessageObject messageObject, final CharSequence caption, boolean animated) {
@@ -12026,6 +12093,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.filePreparingFailed);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.fileNewChunkAvailable);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.chatInfoDidLoad);
 
         placeProvider = provider;
         mergeDialogId = mDialogId;
@@ -12849,6 +12917,7 @@ public class PhotoViewer implements NotificationCenter.NotificationCenterDelegat
         NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.filePreparingFailed);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.fileNewChunkAvailable);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.chatInfoDidLoad);
         ConnectionsManager.getInstance(currentAccount).cancelRequestsForGuid(classGuid);
     }
 

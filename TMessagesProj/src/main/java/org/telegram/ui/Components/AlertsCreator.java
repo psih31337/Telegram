@@ -97,6 +97,7 @@ import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Cells.RadioColorCell;
 import org.telegram.ui.Cells.TextColorCell;
 import org.telegram.ui.ChatActivity;
+import org.telegram.ui.Components.Paint.Input;
 import org.telegram.ui.Components.voip.VoIPHelper;
 import org.telegram.ui.LanguageSelectActivity;
 import org.telegram.ui.LaunchActivity;
@@ -224,6 +225,20 @@ public class AlertsCreator {
                 request instanceof TLRPC.TL_messages_forwardMessages ||
                 request instanceof TLRPC.TL_messages_sendMultiMedia ||
                 request instanceof TLRPC.TL_messages_sendScheduledMessages) {
+
+            TLRPC.InputPeer peer = null;
+            if(request instanceof TLRPC.TL_messages_sendMessage)
+                peer = ((TLRPC.TL_messages_sendMessage) request).peer;
+            else if(request instanceof TLRPC.TL_messages_sendMedia)
+                peer = ((TLRPC.TL_messages_sendMedia) request).peer;
+            else if(request instanceof TLRPC.TL_messages_sendInlineBotResult)
+                peer = ((TLRPC.TL_messages_sendInlineBotResult) request).peer;
+            else if(request instanceof TLRPC.TL_messages_sendMultiMedia)
+                peer = ((TLRPC.TL_messages_sendMultiMedia) request).peer;
+            else if(request instanceof TLRPC.TL_messages_forwardMessages)
+                peer = ((TLRPC.TL_messages_forwardMessages) request).from_peer;
+
+            long cid = peer != null ? peer.chat_id | peer.channel_id : 0;
             switch (error.text) {
                 case "PEER_FLOOD":
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.needShowAlert, 0);
@@ -233,6 +248,16 @@ public class AlertsCreator {
                     break;
                 case "SCHEDULE_TOO_MUCH":
                     showSimpleToast(fragment, LocaleController.getString("MessageScheduledLimitReached", R.string.MessageScheduledLimitReached));
+                    break;
+                case "CHAT_FORWARDS_RESTRICTED":
+                    boolean isChannel = ChatObject.isChannel(cid, currentAccount);
+                    showSimpleToast(fragment, LocaleController.formatString("SaveContentRestricted", R.string.SaveContentRestricted, isChannel?"channel":"group"));
+                    if(cid != 0)
+                        MessagesController.getInstance(currentAccount).loadFullChat(cid,0,true);
+                    break;
+                case "SEND_AS_PEER_INVALID":
+                    if(cid != 0)
+                        MessagesController.getInstance(currentAccount).loadFullChat(cid,0,true);
                     break;
             }
         } else if (request instanceof TLRPC.TL_messages_importChatInvite) {

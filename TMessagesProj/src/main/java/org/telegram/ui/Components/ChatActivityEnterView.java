@@ -52,6 +52,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
+import android.util.Log;
 import android.util.Property;
 import android.util.TypedValue;
 import android.view.ActionMode;
@@ -330,6 +331,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
     @SuppressWarnings("FieldCanBeLocal")
     private ImageView emojiButton2;
     private ImageView expandStickersButton;
+    private SendAsView sendAs;
     private EmojiView emojiView;
     private AnimatorSet panelAnimation;
     private boolean emojiViewVisible;
@@ -2218,6 +2220,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
         });
 
+        sendAs = new SendAsView(context, sizeNotifierLayout, textFieldContainer);
+        frameLayout.addView(sendAs);
+
         if (isChat) {
             if (parentFragment != null) {
                 Drawable drawable1 = context.getResources().getDrawable(R.drawable.input_calendar1).mutate();
@@ -2328,6 +2333,7 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
             }
             botButton.setVisibility(GONE);
             attachLayout.addView(botButton, LayoutHelper.createLinear(48, 48));
+
             botButton.setOnClickListener(v -> {
                 if (searchingType != 0) {
                     setSearchingTypeInternal(0, false);
@@ -3632,6 +3638,10 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 }
             }
         }
+        if(sendAs != null)
+        {
+            sendAs.onWindowSizeChanged(size);
+        }
     }
 
     private void resizeForTopView(boolean show) {
@@ -3781,6 +3791,9 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
         updateScheduleButton(false);
         checkRoundVideo();
         updateFieldHint(false);
+
+        if(sendAs != null)
+            sendAs.setAvatar(currentAccount, dialog_id);
     }
 
     public void setChatInfo(TLRPC.ChatFull chatInfo) {
@@ -8406,6 +8419,12 @@ public class ChatActivityEnterView extends FrameLayout implements NotificationCe
                 ((MarginLayoutParams) emojiButton[i].getLayoutParams()).leftMargin = AndroidUtilities.dp(10) + botCommandsMenuButton.getMeasuredWidth();
             }
             ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = AndroidUtilities.dp(57) + botCommandsMenuButton.getMeasuredWidth();
+        }else if(sendAs != null && sendAs.isShown()) {
+            sendAs.measure(0, 0);
+            for (int i = 0; i < emojiButton.length; i++) {
+                ((MarginLayoutParams) emojiButton[i].getLayoutParams()).leftMargin = AndroidUtilities.dp(10) + sendAs.getAvatarWidth();
+            }
+            ((MarginLayoutParams) messageEditText.getLayoutParams()).leftMargin = AndroidUtilities.dp(57) + sendAs.getAvatarWidth();
         } else {
             for (int i = 0; i < emojiButton.length; i++) {
                 ((MarginLayoutParams) emojiButton[i].getLayoutParams()).leftMargin = AndroidUtilities.dp(3);

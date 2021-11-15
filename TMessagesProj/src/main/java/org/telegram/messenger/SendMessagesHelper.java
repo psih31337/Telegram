@@ -42,6 +42,8 @@ import androidx.annotation.UiThread;
 import androidx.collection.LongSparseArray;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 
+import com.google.android.exoplayer2.util.Log;
+
 import org.json.JSONObject;
 import org.telegram.messenger.audioinfo.AudioInfo;
 import org.telegram.messenger.support.SparseLongArray;
@@ -1957,7 +1959,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             req.from_peer.access_hash = channel.access_hash;
                         }
                     } else {
-                        req.from_peer = new TLRPC.TL_inputPeerEmpty();
+                        req.from_peer = new TLRPC.TL_inputPeerChat();//TL_inputPeerEmpty();
+                        req.from_peer.chat_id = msgObj.messageOwner.peer_id.chat_id;
+                    }
+                    TLRPC.ChatFull chatFull = getMessagesController().getChatFull(inputPeer.chat_id | inputPeer.channel_id);
+                    if(chatFull != null && chatFull.default_send_as != null) {
+                        req.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                        req.flags |= 8192;
+                        newMsgObj.messageOwner.from_id = chatFull.default_send_as;
                     }
                     req.random_id = randomIds;
                     req.id = ids;
@@ -3637,6 +3646,14 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     reqSend.silent = newMsg.silent;
                     reqSend.peer = sendToPeer;
                     reqSend.random_id = newMsg.random_id;
+
+                    TLRPC.ChatFull chatFull = getMessagesController().getChatFull(sendToPeer.chat_id | sendToPeer.channel_id);
+                    if(chatFull != null && chatFull.default_send_as != null) {
+                        reqSend.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                        reqSend.flags |= 8192;
+
+                        newMsgObj.messageOwner.from_id = chatFull.default_send_as;//For update chat, AutorName
+                    }
                     if (newMsg.reply_to != null && newMsg.reply_to.reply_to_msg_id != 0) {
                         reqSend.flags |= 1;
                         reqSend.reply_to_msg_id = newMsg.reply_to.reply_to_msg_id;
@@ -3959,6 +3976,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             request = new TLRPC.TL_messages_sendMultiMedia();
                             request.peer = sendToPeer;
                             request.silent = newMsg.silent;
+                            TLRPC.ChatFull chatFull = getMessagesController().getChatFull(sendToPeer.chat_id | sendToPeer.channel_id);
+                            if(chatFull != null && chatFull.default_send_as != null) {
+                                request.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                                request.flags |= 8192;
+                                newMsgObj.messageOwner.from_id = chatFull.default_send_as;
+                            }
                             if (newMsg.reply_to != null && newMsg.reply_to.reply_to_msg_id != 0) {
                                 request.flags |= 1;
                                 request.reply_to_msg_id = newMsg.reply_to.reply_to_msg_id;
@@ -3998,6 +4021,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         request.random_id = newMsg.random_id;
                         request.media = inputMedia;
                         request.message = caption;
+                        TLRPC.ChatFull chatFull = getMessagesController().getChatFull(sendToPeer.chat_id | sendToPeer.channel_id);
+                        if(chatFull != null && chatFull.default_send_as != null) {
+                            request.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                            request.flags |= 8192;
+                            newMsgObj.messageOwner.from_id = chatFull.default_send_as;
+                        }
                         if (entities != null && !entities.isEmpty()) {
                             request.entities = entities;
                             request.flags |= 8;
@@ -4342,7 +4371,8 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             reqSend.from_peer.channel_id = chat.id;
                             reqSend.from_peer.access_hash = chat.access_hash;
                         } else {
-                            reqSend.from_peer = new TLRPC.TL_inputPeerEmpty();
+                            reqSend.from_peer = new TLRPC.TL_inputPeerChat();//TL_inputPeerEmpty();
+                            reqSend.from_peer.chat_id = chat.id;
                         }
                     } else {
                         reqSend.from_peer = new TLRPC.TL_inputPeerEmpty();
@@ -4350,6 +4380,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     reqSend.id.add(fwdId);
                 } else {
                     reqSend.from_peer = new TLRPC.TL_inputPeerEmpty();
+                }
+                TLRPC.ChatFull chatFull = getMessagesController().getChatFull(sendToPeer.chat_id | sendToPeer.channel_id);
+                if(chatFull != null && chatFull.default_send_as != null) {
+                    reqSend.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                    reqSend.flags |= 8192;
+                    newMsgObj.messageOwner.from_id = chatFull.default_send_as;
                 }
                 reqSend.silent = newMsg.silent;
                 if (scheduleDate != 0) {
@@ -4375,6 +4411,12 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 if (newMsg.reply_to != null && newMsg.reply_to.reply_to_msg_id != 0) {
                     reqSend.flags |= 1;
                     reqSend.reply_to_msg_id = newMsg.reply_to.reply_to_msg_id;
+                }
+                TLRPC.ChatFull chatFull = getMessagesController().getChatFull(sendToPeer.chat_id | sendToPeer.channel_id);
+                if(chatFull != null && chatFull.default_send_as != null) {
+                    reqSend.send_as = getMessagesController().getInputPeer(chatFull.default_send_as);
+                    reqSend.flags |= 8192;
+                    newMsgObj.messageOwner.from_id = chatFull.default_send_as;
                 }
                 reqSend.silent = newMsg.silent;
                 if (scheduleDate != 0) {

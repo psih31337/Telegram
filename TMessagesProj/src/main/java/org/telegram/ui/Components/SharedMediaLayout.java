@@ -73,6 +73,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.messenger.browser.Browser;
@@ -386,6 +387,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
     public ImageView photoVideoOptionsItem;
     private ActionBarMenuItem forwardItem;
     private ActionBarMenuItem gotoItem;
+    private HintView forwardHintView;
     private int searchItemState;
     private Drawable pinnedHeaderShadowDrawable;
     private boolean ignoreSearchCollapse;
@@ -1116,6 +1118,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.messagePlayingDidReset);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.messagePlayingPlayStateChanged);
         profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.messagePlayingDidStart);
+        profileActivity.getNotificationCenter().addObserver(this, NotificationCenter.chatInfoDidLoad);
 
         for (int a = 0; a < 10; a++) {
             //cellCache.add(new SharedPhotoVideoCell(context));
@@ -1432,6 +1435,10 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             actionModeLayout.addView(forwardItem, new LinearLayout.LayoutParams(AndroidUtilities.dp(54), ViewGroup.LayoutParams.MATCH_PARENT));
             actionModeViews.add(forwardItem);
             forwardItem.setOnClickListener(v -> onActionBarItemClick(forward));
+
+            if(!ChatObject.canSaveContent(dialog_id)) {
+                forwardItem.setAlpha(0.5f);
+            }
         }
         deleteItem = new ActionBarMenuItem(context, null, Theme.getColor(Theme.key_actionBarActionModeDefaultSelector), Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         deleteItem.setIcon(R.drawable.msg_delete);
@@ -2853,6 +2860,7 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.messagePlayingDidReset);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.messagePlayingPlayStateChanged);
         profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.messagePlayingDidStart);
+        profileActivity.getNotificationCenter().removeObserver(this, NotificationCenter.chatInfoDidLoad);
     }
 
     private void checkCurrentTabValid() {
@@ -3030,6 +3038,18 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
                 cantDeleteMessagesCount = 0;
             }, null);
         } else if (id == forward) {
+            if(!ChatObject.canSaveContent(dialog_id))
+            {
+                forwardHintView.showForView(forwardItem, true);
+                forwardHintView.bringToFront();
+                forwardHintView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        forwardHintView.hide();
+                    }
+                }, 1000);
+                return;
+            }
             Bundle args = new Bundle();
             args.putBoolean("onlySelect", true);
             args.putInt("dialogsType", 3);
@@ -3455,6 +3475,15 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
         if (show) {
             actionModeLayout.setVisibility(VISIBLE);
         }
+        if(forwardHintView == null)
+        {
+            TLRPC.Chat owner = profileActivity.getMessagesController().getChat(-dialog_id);
+            forwardHintView = new HintView(this.getContext(), 4);
+            forwardHintView.setVisibility(INVISIBLE);
+            forwardHintView.setShowingDuration(500);
+            forwardHintView.setText(LocaleController.formatString("SaveContentRestricted", R.string.SaveContentRestricted, ChatObject.isChannel(owner) ? "channel" : "group"));
+            profileActivity.getLayoutContainer().addView(forwardHintView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 19, 0, 19, 0));
+        }
         actionModeAnimation = new AnimatorSet();
         actionModeAnimation.playTogether(ObjectAnimator.ofFloat(actionModeLayout, View.ALPHA, show ? 1.0f : 0.0f));
         actionModeAnimation.setDuration(180);
@@ -3766,7 +3795,12 @@ public class SharedMediaLayout extends FrameLayout implements NotificationCenter
             for (int a = 0; a < sharedMediaData.length; a++) {
                 sharedMediaData[a].replaceMid(msgId, newMsgId);
             }
-        } else if (id == NotificationCenter.messagePlayingDidStart || id == NotificationCenter.messagePlayingPlayStateChanged || id == NotificationCenter.messagePlayingDidReset) {
+        }else if(id == NotificationCenter.chatInfoDidLoad) {
+            TLRPC.ChatFull chat = (TLRPC.ChatFull)args[0];
+            if (chat.id == -dialog_id) {
+                forwardItem.setAlpha(ChatObject.canSaveContent(dialog_id) ? 1.0f : 0.5f);
+            }
+        }else if (id == NotificationCenter.messagePlayingDidStart || id == NotificationCenter.messagePlayingPlayStateChanged || id == NotificationCenter.messagePlayingDidReset) {
             if (id == NotificationCenter.messagePlayingDidReset || id == NotificationCenter.messagePlayingPlayStateChanged) {
                 for (int b = 0; b < mediaPages.length; b++) {
                     int count = mediaPages[b].listView.getChildCount();

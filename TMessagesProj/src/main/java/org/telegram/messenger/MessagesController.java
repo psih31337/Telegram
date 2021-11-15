@@ -6048,6 +6048,9 @@ public class MessagesController extends BaseController implements NotificationCe
             if (ChatObject.shouldSendAnonymously(getChat(-dialogId))) {
                 return false;
             }
+            TLRPC.ChatFull chat = getMessagesController().getChatFull(-dialogId);
+            if(chat != null && chat.default_send_as != null && chat.default_send_as.user_id != getUserConfig().getClientUserId())
+                return false;
         } else {
             TLRPC.User user = getUser(dialogId);
             if (user != null) {
@@ -9088,6 +9091,18 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             processUpdates((TLRPC.Updates) response, false);
         });
+    }
+
+    public void toogleChannelNoforward(long chatId, boolean enabled) {
+        TLRPC.TL_messages_toggleNoForwards req = new TLRPC.TL_messages_toggleNoForwards();
+        req.peer = MessagesController.getInstance(currentAccount).getInputPeer(-chatId);
+        req.enabled = enabled;
+        getConnectionsManager().sendRequest(req, (response, error) -> {
+            if (response != null) {
+                processUpdates((TLRPC.Updates) response, false);
+                AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_CHAT));
+            }
+        }, ConnectionsManager.RequestFlagInvokeAfter);
     }
 
     public void toogleChannelSignatures(long chatId, boolean enabled) {

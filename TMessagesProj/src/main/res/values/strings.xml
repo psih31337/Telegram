@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="AppName">Telegram</string>
-    <string name="AppNameBeta">Telegram Beta</string>
+    <string name="AppName">Telegram Alpha</string>
+    <string name="AppNameBeta">Telegram Alpha</string>
     <string name="LanguageName">English</string>
     <string name="English">English</string>
     <string name="LanguageNameInEnglish">English</string>
@@ -588,6 +588,7 @@
     <string name="ChannelTypeHeader">Channel type</string>
     <string name="GroupSettingsTitle">Group Settings</string>
     <string name="ChannelSettingsTitle">Channel Settings</string>
+    <string name="TypeSaveRestricted">restricted</string>
     <string name="TypePrivate">Private</string>
     <string name="TypePublic">Public</string>
     <string name="TypePrivateGroup">Private</string>
@@ -777,6 +778,8 @@
     <string name="EventLogToggledInvitesOn">un1 enabled group invites</string>
     <string name="EventLogToggledInvitesOff">un1 disabled group invites</string>
     <string name="EventLogToggledSignaturesOn">un1 enabled signatures</string>
+    <string name="EventLogToggledNoforwardsOn">un1 enabled noforward</string>
+    <string name="EventLogToggledNoforwardsOff">un1 disabled noforward</string>
     <string name="EventLogToggledSignaturesOff">un1 disabled signatures</string>
     <string name="EventLogRestrictedUntil">changed permissions for %1$s\n\nDuration: %2$s</string>
     <string name="EventLogDefaultPermissions">changed default permissions</string>
@@ -976,6 +979,7 @@
     <string name="UploadItems">Upload %1$s</string>
     <string name="SendAsFile">Send as file</string>
     <string name="SendAsFiles">Send as files</string>
+    <string name="SendMsgAs">Send message as...</string>
     <string name="OpenUrlTitle">Open Link</string>
     <string name="OpenUrlAlert2">Do you want to open %1$s?</string>
     <string name="OpenUrlOption1">Log in to %1$s as **%2$s**</string>
@@ -1096,6 +1100,7 @@
     <string name="DiscardVideoMessageTitle">Discard Video Message</string>
     <string name="DiscardVideoMessageDescription">Are you sure you want to stop recording and discard your video message?</string>
     <string name="DiscardVoiceMessageAction">Discard</string>
+    <string name="SaveContentRestricted">Forwards from this %1$s are restricted.</string>
     <string name="AttachMediaRestricted">The admins of this group have restricted you from sending media here until %1$s</string>
     <string name="AttachInlineRestricted">The admins of this group have restricted you from sending inline content here until %1$s</string>
     <string name="AttachStickersRestricted">The admins of this group have restricted you from sending stickers here until %1$s</string>
@@ -1466,6 +1471,9 @@
     <string name="GigagroupConvertAlertConver">CONVERT</string>
     <string name="GigagroupConvertCancelHint">If you change your mind, go to the settings of your group.</string>
     <!--group info view-->
+    <string name="SavingRestrictInfo">Participiants won\'t be able to forward messages from this %1$s or save media files</string>
+    <string name="SavingRestrictSwitch">Restrict saving content</string>
+    <string name="SavingRestrictHeader">Saving content</string>
     <string name="GroupMembers">Members</string>
     <string name="SharedMedia">Shared Media</string>
     <string name="SETTINGS">Settings</string>
@@ -1475,6 +1483,8 @@
     <string name="BanFromTheGroup">BAN FROM THE GROUP</string>
     <string name="DeleteAndExit">Delete and leave group</string>
     <string name="DeleteAndExitButton">Delete and Leave Group</string>
+    <string name="ClearHistoryButton">CLEAR HISTORY</string>
+    <string name="SelectDaysButton">Select days</string>
     <string name="Notifications">Notifications</string>
     <string name="ChangePermissions">Change permissions</string>
     <string name="KickFromGroup">Remove from group</string>
@@ -3300,6 +3310,7 @@
     <string name="AreYouSureClearHistoryWithSecretUser">Are you sure you want to clear your secret chat history with **%1$s**?</string>
     <string name="AreYouSureClearHistoryWithChat">Are you sure you want to clear the chat history in **%1$s**?</string>
     <string name="AreYouSureClearHistory">Are you sure you want to delete all messages in this chat?</string>
+    <string name="AreYouSureClearHistoryDays">Are you sure you want to delete all messages for the %d selected days</string>
     <string name="AreYouSureClearHistorySavedMessages">Are you sure you want to clear **Saved Messages**?</string>
     <string name="AreYouSureClearHistoryChannel">Delete all cached text and media from this channel?</string>
     <string name="AreYouSureClearHistoryGroup">Delete all cached text and media from this group?</string>

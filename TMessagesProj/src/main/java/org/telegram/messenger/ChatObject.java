@@ -1503,6 +1503,15 @@ public class ChatObject {
         return chat != null && (chat.creator || chat.admin_rights != null && chat.admin_rights.flags != 0);
     }
 
+    public static boolean canSaveContent(TLRPC.Chat chat) {
+        return chat == null || !chat.noforwards;
+    }
+
+    public static boolean canSaveContent(long chatId) {
+        TLRPC.Chat chat = MessagesController.getInstance(UserConfig.selectedAccount).getChat(-chatId);
+        return chat == null || !chat.noforwards;
+    }
+
     public static boolean canChangeChatInfo(TLRPC.Chat chat) {
         return canUserDoAction(chat, ACTION_CHANGE_INFO);
     }

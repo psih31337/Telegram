@@ -15,6 +15,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +44,8 @@ import org.telegram.ui.Cells.LoadingCell;
 import org.telegram.ui.Cells.RadioButtonCell;
 import org.telegram.ui.Cells.ShadowSectionCell;
 import org.telegram.ui.Cells.TextCell;
+import org.telegram.ui.Cells.TextCheckCell;
+import org.telegram.ui.Cells.TextCheckCell2;
 import org.telegram.ui.Cells.TextInfoPrivacyCell;
 import org.telegram.ui.Cells.TextSettingsCell;
 import org.telegram.ui.Components.EditTextBoldCursor;
@@ -81,6 +84,11 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
     private TextSettingsCell textCell;
     private TextSettingsCell textCell2;
 
+    private LinearLayout saveContainer;
+    private HeaderCell saveHeader;
+    private TextCheckCell saveSwitch;
+    private TextInfoPrivacyCell saveInfo;
+
     private boolean isPrivate;
 
     private TLRPC.Chat currentChat;
@@ -102,6 +110,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
     private TLRPC.TL_chatInviteExported invite;
 
     private boolean ignoreTextChanges;
+    private boolean canSaveContent;
 
     private boolean isForcePublic;
     HashMap<Long, TLRPC.User> usersMap = new HashMap<>();
@@ -131,6 +140,7 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
                 }
             }
         }
+        canSaveContent = currentChat.noforwards;
         isPrivate = !isForcePublic && TextUtils.isEmpty(currentChat.username);
         isChannel = ChatObject.isChannel(currentChat) && !currentChat.megagroup;
         if (isForcePublic && TextUtils.isEmpty(currentChat.username) || isPrivate && currentChat.creator) {
@@ -385,6 +395,28 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
         adminedInfoCell = new ShadowSectionCell(context);
         linearLayout.addView(adminedInfoCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
+        saveContainer = new LinearLayout(context);
+        saveContainer.setOrientation(LinearLayout.VERTICAL);
+        saveContainer.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        linearLayout.addView(saveContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        saveHeader = new HeaderCell(context, 23);
+        saveHeader.setText(LocaleController.getString("SavingRestrictHeader", R.string.SavingRestrictHeader));
+        saveContainer.addView(saveHeader);
+
+        saveSwitch = new TextCheckCell(context);
+        saveSwitch.setTextAndCheck(LocaleController.getString("SavingRestrictSwitch", R.string.SavingRestrictSwitch), canSaveContent, false);
+        saveSwitch.setOnClickListener(v -> {
+            canSaveContent = !canSaveContent;
+            saveSwitch.setChecked(canSaveContent);
+            getMessagesController().toogleChannelNoforward(chatId, canSaveContent);
+        });
+        saveSwitch.setFocusable(true);
+        saveContainer.addView(saveSwitch);
+
+        saveInfo = new TextInfoPrivacyCell(context);
+        saveInfo.setText(LocaleController.formatString("SavingRestrictInfo", R.string.SavingRestrictInfo, isChannel?"channel":"group"));
+        linearLayout.addView(saveInfo, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         manageLinksTextView = new TextCell(context);
         manageLinksTextView.setBackgroundDrawable(Theme.getSelectorDrawable(true));
@@ -580,6 +612,10 @@ public class ChatEditTypeActivity extends BaseFragment implements NotificationCe
             manageLinksTextView.setVisibility(View.VISIBLE);
             manageLinksInfoCell.setVisibility(View.VISIBLE);
             linkContainer.setPadding(0, 0, 0, isPrivate ? 0 : AndroidUtilities.dp(7));
+
+            saveContainer.setVisibility(isPrivate ? View.VISIBLE : View.GONE);
+            saveSwitch.setChecked(isPrivate ? canSaveContent : false);
+
             permanentLinkView.setLink(invite != null ? invite.link : null);
             permanentLinkView.loadUsers(invite, chatId);
             checkTextView.setVisibility(!isPrivate && checkTextView.length() != 0 ? View.VISIBLE : View.GONE);
